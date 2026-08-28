@@ -22,14 +22,26 @@ from fastapi import FastAPI, HTTPException, Header, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.models import UserRegister, UserLogin, AuthResponse, UserProfile, ValidationResult, AnswerSubmission
 from app.database import (
     init_db, create_user, authenticate_user,
     get_user_by_token, add_user_xp, save_exercise_score, get_user_scores
 )
 from app.data import CURRICULUM_DB, QUESTIONS_DB
-import unicodedata
+import unicodedata, os
 app = FastAPI(title="Aprende Español API")
+
+# Chemin vers le dossier frontend (remonte d'un niveau si Root Directory = backend)
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
+
+if os.path.exists(frontend_path):
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
+    @app.get("/")
+    def serve_home():
+        return FileResponse(os.path.join(frontend_path, "index.html"))
 
 
 # Initialisation de SQLite au démarrage
